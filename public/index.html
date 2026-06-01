@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secret Builders Style Virtual World</title>
+  <meta name="description" content="A cute, whimsical 2D multiplayer virtual world inspired by classic online cartoon games." />
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #7dd3fc; /* Sky blue */
+      background-image: radial-gradient(circle at top, #bae6fd 0%, #38bdf8 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Fredoka', sans-serif;
+      overflow: hidden;
+    }
+    #game-container {
+      position: relative;
+      border: 8px solid #fef08a; /* Soft butter yellow border */
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 4px #eab308, /* Gold shadow border */
+        0 20px 50px rgba(2, 132, 199, 0.4);
+      background: #86efac; /* Grass green */
+    }
+    #game-container canvas {
+      display: block;
+    }
+
+    /* ── Whimsical Chat Overlay ── */
+    #chat-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      gap: 12px;
+      padding: 16px 20px;
+      background: linear-gradient(to top, rgba(254, 240, 138, 0.95) 80%, rgba(254, 240, 138, 0));
+      z-index: 10;
+      align-items: center;
+    }
+    #chatInput {
+      flex: 1;
+      padding: 12px 20px;
+      border: 3px solid #facc15;
+      border-radius: 9999px;
+      background: #ffffff;
+      color: #1e293b;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Fredoka', sans-serif;
+      outline: none;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #chatInput::placeholder {
+      color: #94a3b8;
+    }
+    #chatInput:focus {
+      border-color: #ca8a04;
+      box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.25);
+    }
+    #chatSendBtn {
+      padding: 12px 24px;
+      border: 3px solid #db2777;
+      border-radius: 9999px;
+      background: linear-gradient(135deg, #f472b6, #ec4899);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Fredoka', sans-serif;
+      cursor: pointer;
+      text-shadow: 0 2px 0 rgba(0,0,0,0.15);
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 0 #be185d;
+    }
+    #chatSendBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #be185d;
+    }
+    #chatSendBtn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #be185d;
+    }
+
+    /* ── Cute Player Count badge ── */
+    #player-count {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      background: #ffffff;
+      border: 3px solid #38bdf8;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      color: #0369a1;
+      font-size: 14px;
+      font-weight: 700;
+      z-index: 10;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="player-count">0 online</div>
+    <div id="chat-overlay">
+      <input type="text" id="chatInput" placeholder="Say hello to other builders!..." autocomplete="off" />
+      <button id="chatSendBtn">Chat!</button>
+    </div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
