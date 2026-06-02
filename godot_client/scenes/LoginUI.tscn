@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://c8j7x2n6k4m9v"]
+[gd_scene format=3 uid="uid://c8j7x2n6k4nav"]
 
 [ext_resource type="Script" path="res://scenes/LoginUI.gd" id="1"]
 [ext_resource type="Texture2D" uid="uid://df723qxw5f778" path="res://assets/splash_treehouse.png" id="2"]
