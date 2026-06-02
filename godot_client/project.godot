@@ -21,6 +21,7 @@ config/features=PackedStringArray("4.6", "Mobile")
 [autoload]
 
 ItemDatabase="*res://autoload/ItemDatabase.gd"
+NetworkManager="*res://autoload/NetworkManager.gd"
 
 [display]
 

@@ -7,6 +7,10 @@ extends Node2D
 @onready var avatar: Node2D = $Avatar
 @onready var customizer_ui: CanvasLayer = $CustomizerUI
 
+var other_players: Dictionary = {}
+var my_id: String = ""
+var avatar_scene: PackedScene = preload("res://scenes/Avatar.tscn")
+
 
 func _ready() -> void:
 	# Wire the CustomizerUI to the Avatar
@@ -15,6 +19,13 @@ func _ready() -> void:
 
 	# Load any previously saved avatar state
 	_load_saved_state()
+
+	# Network bindings
+	NetworkManager.connected_to_server.connect(_on_connected)
+	NetworkManager.player_joined.connect(_on_player_joined)
+	NetworkManager.player_moved.connect(_on_player_moved)
+	NetworkManager.player_left.connect(_on_player_left)
+	NetworkManager.player_customized.connect(_on_player_customized)
 
 	# Print serialization demo to console
 	call_deferred("_print_state_info")
@@ -38,6 +49,10 @@ func _save_state() -> void:
 	if file:
 		file.store_string(json)
 		file.close()
+
+	# Also send to server
+	if my_id != "":
+		NetworkManager.send_customize(JSON.parse_string(json))
 
 
 func _load_saved_state() -> void:
@@ -172,3 +187,104 @@ func _draw_oval(center: Vector2, rx: float, ry: float, color: Color) -> void:
 		var angle: float = TAU * float(i) / float(segments)
 		points.append(center + Vector2(cos(angle) * rx, sin(angle) * ry))
 	draw_colored_polygon(points, color)
+
+
+# ─── Input Handling ──────────────────────────────────────────────────────────
+
+func _unhandled_input(event: InputEvent) -> void:
+	# Check for tap/click to move the avatar
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var target_pos = get_global_mouse_position()
+		
+		# Send move to server
+		NetworkManager.send_move(target_pos.x, target_pos.y)
+		
+		# Optimistic local movement
+		_tween_avatar_move(avatar, target_pos)
+	
+	elif event is InputEventScreenTouch and event.pressed:
+		var target_pos = event.position
+		NetworkManager.send_move(target_pos.x, target_pos.y)
+		_tween_avatar_move(avatar, target_pos)
+
+
+# ─── Multiplayer Networking ─────────────────────────────────────────────
+
+func _on_connected(id: String, players: Dictionary) -> void:
+	my_id = id
+	# We just got our ID, let's broadcast our look to the server
+	var json: String = avatar.export_avatar_state()
+	NetworkManager.send_customize(JSON.parse_string(json))
+	
+	# Setup existing players
+	for pid in players.keys():
+		if pid != my_id:
+			_spawn_player(pid, players[pid])
+
+
+func _on_player_joined(id: String, data: Dictionary) -> void:
+	if id != my_id:
+		_spawn_player(id, data)
+
+
+func _on_player_left(id: String) -> void:
+	if other_players.has(id):
+		other_players[id].queue_free()
+		other_players.erase(id)
+
+
+func _on_player_moved(id: String, x: float, y: float) -> void:
+	if other_players.has(id):
+		var other_avatar = other_players[id]
+		_tween_avatar_move(other_avatar, Vector2(x, y))
+
+
+func _on_player_customized(id: String, data: Dictionary) -> void:
+	if other_players.has(id):
+		var other_avatar = other_players[id]
+		# Load the state
+		other_avatar.load_avatar_state(JSON.stringify(data))
+
+
+func _spawn_player(id: String, data: Dictionary) -> void:
+	if other_players.has(id):
+		return
+	
+	var new_avatar = avatar_scene.instantiate()
+	add_child(new_avatar)
+	
+	# Load customized state
+	new_avatar.load_avatar_state(JSON.stringify(data))
+	
+	# Set position
+	new_avatar.position = Vector2(data.get("x", 360), data.get("y", 300))
+	
+	# Scale it down a bit to match the original game perhaps? Or keep the same 5x scale?
+	new_avatar.scale = Vector2(5, 5)
+	
+	other_players[id] = new_avatar
+
+
+func _tween_avatar_move(target_avatar: Node2D, target_pos: Vector2) -> void:
+	var dist = target_avatar.position.distance_to(target_pos)
+	var duration = clamp(dist * 0.003, 0.2, 1.0)
+	
+	var tween = create_tween()
+	tween.set_parallel(true)
+	
+	# Move position
+	tween.tween_property(target_avatar, "position", target_pos, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	
+	# Waddle effect - scale bounce
+	var original_scale = Vector2(5, 5)
+	if target_avatar == avatar:
+		original_scale = avatar.scale
+	else:
+		target_avatar.scale = original_scale
+		
+	var waddle_steps = max(1, int(duration / 0.2))
+	
+	var scale_tween = create_tween()
+	for i in range(waddle_steps):
+		scale_tween.tween_property(target_avatar, "scale", Vector2(original_scale.x * 1.15, original_scale.y * 0.8), 0.1)
+		scale_tween.tween_property(target_avatar, "scale", original_scale, 0.1)
