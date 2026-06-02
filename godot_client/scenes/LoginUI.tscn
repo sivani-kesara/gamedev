@@ -1,7 +1,30 @@
-[gd_scene load_steps=3 format=3 uid="uid://c8j7x2n6k4m9v"]
+[gd_scene load_steps=5 format=3 uid="uid://c8j7x2n6k4m9v"]
 
 [ext_resource type="Script" path="res://scenes/LoginUI.gd" id="1"]
 [ext_resource type="Texture2D" uid="uid://df723qxw5f778" path="res://assets/splash_treehouse.png" id="2"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bubbly"]
+bg_color = Color(0.380392, 0.709804, 1, 1)
+border_width_left = 6
+border_width_top = 6
+border_width_right = 6
+border_width_bottom = 6
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+expand_margin_left = 10.0
+expand_margin_top = 10.0
+expand_margin_right = 10.0
+expand_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_back"]
+bg_color = Color(0.2, 0.2, 0.2, 0.8)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [node name="LoginUI" type="Control"]
 layout_mode = 3
@@ -23,30 +46,80 @@ texture = ExtResource("2")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -160.0
-offset_top = -300.0
-offset_right = 160.0
-offset_bottom = -150.0
 grow_horizontal = 2
-grow_vertical = 0
+grow_vertical = 2
+
+[node name="SelectionMenu" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 40
+
+[node name="NewPlayerButton" type="Button" parent="CenterContainer/SelectionMenu"]
+custom_minimum_size = Vector2(300, 100)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_bubbly")
+theme_override_styles/hover = SubResource("StyleBoxFlat_bubbly")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_bubbly")
+text = "NEW PLAYER
+Click Here"
+
+[node name="ReturningPlayerButton" type="Button" parent="CenterContainer/SelectionMenu"]
+custom_minimum_size = Vector2(300, 100)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_bubbly")
+theme_override_styles/hover = SubResource("StyleBoxFlat_bubbly")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_bubbly")
+text = "RETURNING PLAYER
+Click Here"
+
+[node name="InputForm" type="VBoxContainer" parent="CenterContainer"]
+visible = false
+layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="UsernameInput" type="LineEdit" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 50)
+[node name="FormTitle" type="Label" parent="CenterContainer/InputForm"]
 layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 36
+text = "Welcome!"
+horizontal_alignment = 1
+
+[node name="UsernameInput" type="LineEdit" parent="CenterContainer/InputForm"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
 placeholder_text = "Enter Username..."
 alignment = 1
 
-[node name="EnterButton" type="Button" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 60)
+[node name="SubmitButton" type="Button" parent="CenterContainer/InputForm"]
+custom_minimum_size = Vector2(300, 70)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_bubbly")
+theme_override_styles/hover = SubResource("StyleBoxFlat_bubbly")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_bubbly")
 text = "Enter World"
+
+[node name="BackButton" type="Button" parent="CenterContainer/InputForm"]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/normal = SubResource("StyleBoxFlat_back")
+text = "<- Back"
