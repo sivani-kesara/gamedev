@@ -14,11 +14,17 @@ var server_url := "ws://localhost:8000/ws"
 var is_new_signup: bool = false
 
 func _ready() -> void:
+	connect_to_server()
+
+func connect_to_server() -> void:
+	if socket.get_ready_state() != WebSocketPeer.STATE_CLOSED:
+		socket.close()
 	var err = socket.connect_to_url(server_url)
 	if err != OK:
 		print("NetworkManager: Unable to connect to ", server_url)
 	else:
 		print("NetworkManager: Connecting to ", server_url, "...")
+		set_process(true)
 
 
 func _process(_delta: float) -> void:

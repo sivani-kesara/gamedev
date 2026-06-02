@@ -66,12 +66,12 @@ func _on_submit_pressed() -> void:
 	if NetworkManager.socket.get_ready_state() == WebSocketPeer.STATE_OPEN:
 		NetworkManager.send_auth_request(current_mode == LoginMode.NEW_PLAYER, username, password)
 	else:
-		error_label.text = "Not connected to server."
-		submit_button.disabled = false
-		submit_button.text = "Start Building" if current_mode == LoginMode.NEW_PLAYER else "Enter World"
+		error_label.text = "Reconnecting..."
+		NetworkManager.connect_to_server()
 
 func _on_connected(_id: String, _players: Dictionary) -> void:
-	if submit_button.disabled and error_label.text == "":
+	if submit_button.disabled and (error_label.text == "" or error_label.text == "Reconnecting..."):
+		error_label.text = ""
 		var username: String = username_input.text.strip_edges()
 		var password: String = password_input.text
 		NetworkManager.send_auth_request(current_mode == LoginMode.NEW_PLAYER, username, password)
