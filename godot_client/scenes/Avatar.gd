@@ -72,6 +72,10 @@ func load_avatar_state(json_string: String) -> void:
 	current_state["back"] = data.get("b", "none")
 	current_state["skin"] = data.get("s", "default")
 	current_state["mood"] = data.get("m", "is happy")
+	if data.has("name"):
+		current_state["name"] = data["name"]
+	if data.has("color"):
+		current_state["color"] = data["color"]
 	# Resolve skin color from skin ID
 	var skin_item := ItemDatabase.get_item_by_id("skin", current_state["skin"])
 	if not skin_item.is_empty():
@@ -87,6 +91,10 @@ func _draw() -> void:
 
 	# Soft shadow underneath character
 	_draw_ellipse_filled(Vector2(0, 28), 11.0, 3.0, Color(0, 0, 0, 0.15))
+
+	# Name tag
+	if current_state.has("name"):
+		_draw_nametag(current_state["name"], current_state.get("color", "0xffffff"))
 
 	# Layer 1: Back items (behind body)
 	_draw_back_item()
@@ -111,6 +119,29 @@ func _draw() -> void:
 
 
 # ─── Layer 1: Back Items ────────────────────────────────────────────
+
+func _draw_nametag(player_name: String, border_color_str: String) -> void:
+	var font := ThemeDB.fallback_font
+	var font_size := 12
+	var text_size := font.get_string_size(player_name, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size)
+	
+	var tag_width := maxf(60.0, text_size.x + 16.0)
+	var tag_height := 18.0
+	var tag_rect := Rect2(-tag_width / 2.0, -60.0, tag_width, tag_height)
+	
+	var border_color := Color.BLACK
+	if border_color_str.begins_with("0x"):
+		border_color = Color(border_color_str.replace("0x", "#"))
+		
+	# Draw background pill
+	_draw_rounded_rect_filled(tag_rect, 9.0, Color(1, 1, 1, 0.95))
+	_draw_rounded_rect_stroke(tag_rect, 9.0, border_color, 2.0)
+	
+	# Draw text
+	var text_pos := Vector2(-text_size.x / 2.0, -60.0 + font.get_ascent(font_size) + (tag_height - text_size.y) / 2.0)
+	draw_string(font, text_pos, player_name, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("0f172a"))
+
+
 func _draw_back_item() -> void:
 	var back: String = current_state.get("back", "none")
 	if back == "skateboard":
