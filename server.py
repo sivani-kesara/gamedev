@@ -1,7 +1,6 @@
 import json
 import uuid
 import random
-# pyrefly: ignore [missing-import]
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 
@@ -38,16 +37,30 @@ async def websocket_endpoint(websocket: WebSocket):
 
     client_id = str(uuid.uuid4())
     color = random_color()
-    players[client_id] = {"x": 400, "y": 300, "color": color}
+    
+    # Initialize with default look matching Secret Builders options
+    players[client_id] = {
+        "x": 400,
+        "y": 300,
+        "color": color,
+        "name": f"Builder_{client_id[:5]}",
+        "mood": "is happy",
+        "hair": "emo_black",
+        "hat": "cap_sb",
+        "outfit": "collared_tie",
+        "back": "skateboard",
+        "aura": "grass",
+        "days": random.randint(10, 1500),
+        "level": random.randint(1, 40)
+    }
+    
     connected_clients.append((client_id, websocket))
 
     # Broadcast to ALL that a new player joined
     await broadcast({
         "type": "playerJoined",
         "id": client_id,
-        "x": 400,
-        "y": 300,
-        "color": color,
+        "player": players[client_id]
     })
 
     # Send the new client the full current state
@@ -82,6 +95,23 @@ async def websocket_endpoint(websocket: WebSocket):
                     "type": "playerChat",
                     "id": client_id,
                     "message": message,
+                })
+
+            elif action == "customize":
+                if client_id in players:
+                    players[client_id].update({
+                        "hair": data.get("hair", players[client_id]["hair"]),
+                        "hat": data.get("hat", players[client_id]["hat"]),
+                        "outfit": data.get("outfit", players[client_id]["outfit"]),
+                        "back": data.get("back", players[client_id]["back"]),
+                        "aura": data.get("aura", players[client_id]["aura"]),
+                        "mood": data.get("mood", players[client_id]["mood"]),
+                        "color": data.get("color", players[client_id]["color"]),
+                    })
+                await broadcast({
+                    "type": "playerCustomized",
+                    "id": client_id,
+                    "player": players[client_id]
                 })
 
     except WebSocketDisconnect:

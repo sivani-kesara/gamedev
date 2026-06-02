@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Secret Builders Style Virtual World</title>
-  <meta name="description" content="A cute, whimsical 2D multiplayer virtual world inspired by classic online cartoon games." />
+  <meta name="description" content="A cute, whimsical 2D multiplayer virtual world with character customization." />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet" />
@@ -15,16 +15,19 @@
       box-sizing: border-box;
     }
     body {
-      background: #7dd3fc; /* Sky blue */
+      background: #7dd3fc;
       background-image: radial-gradient(circle at top, #bae6fd 0%, #38bdf8 100%);
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
+      height: 100vh;
+      width: 100vw;
       font-family: 'Fredoka', sans-serif;
       overflow: hidden;
+      margin: 0;
+      padding: 0;
     }
-    #game-container {
+    #game-wrapper {
       position: relative;
       border: 8px solid #fef08a; /* Soft butter yellow border */
       border-radius: 28px;
@@ -33,9 +36,75 @@
         0 0 0 4px #eab308, /* Gold shadow border */
         0 20px 50px rgba(2, 132, 199, 0.4);
       background: #86efac; /* Grass green */
+      width: 100vw;
+      height: 100vh;
+      max-width: 800px;
+      max-height: 600px;
+    }
+
+    @media (max-width: 820px), (max-height: 620px) {
+      #game-wrapper {
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        max-width: 100%;
+        max-height: 100%;
+      }
+    }
+    #game-container {
+      width: 100%;
+      height: 100%;
     }
     #game-container canvas {
       display: block;
+    }
+
+    /* ── Whimsical Top HUD Bar ── */
+    #top-hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 16px;
+      z-index: 40; /* High z-index to float over canvas */
+      pointer-events: none; /* Let clicks pass through except on interactive items */
+    }
+
+    /* ── Customization & Profile Buttons ── */
+    #my-profile-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      padding: 10px 22px;
+      border-radius: 9999px;
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      border: 3px solid #ffffff;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      transition: transform 0.15s;
+      pointer-events: auto; /* enable click */
+      z-index: 50;
+    }
+    #my-profile-btn:hover {
+      transform: scale(1.05);
+    }
+
+    #player-count {
+      padding: 8px 18px;
+      border-radius: 9999px;
+      background: #ffffff;
+      border: 3px solid #38bdf8;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      color: #0369a1;
+      font-size: 14px;
+      font-weight: 700;
+      pointer-events: none;
     }
 
     /* ── Whimsical Chat Overlay ── */
@@ -48,7 +117,7 @@
       gap: 12px;
       padding: 16px 20px;
       background: linear-gradient(to top, rgba(254, 240, 138, 0.95) 80%, rgba(254, 240, 138, 0));
-      z-index: 10;
+      z-index: 30; /* overlay canvas */
       align-items: center;
     }
     #chatInput {
@@ -63,10 +132,6 @@
       font-family: 'Fredoka', sans-serif;
       outline: none;
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    #chatInput::placeholder {
-      color: #94a3b8;
     }
     #chatInput:focus {
       border-color: #ca8a04;
@@ -95,32 +160,341 @@
       box-shadow: 0 2px 0 #be185d;
     }
 
-    /* ── Cute Player Count badge ── */
-    #player-count {
+    /* ── Whimsical Profile Modal (Secret Builders Style) ── */
+    #profile-modal {
+      display: none;
       position: absolute;
-      top: 16px;
-      left: 16px;
-      padding: 8px 18px;
-      border-radius: 9999px;
-      background: #ffffff;
-      border: 3px solid #38bdf8;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-      color: #0369a1;
-      font-size: 14px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90vw;
+      max-width: 400px;
+      height: 90vh;
+      max-height: 520px;
+      background: #e0f2fe; /* Light cloud blue */
+      border: 6px solid #38bdf8;
+      border-radius: 24px;
+      box-shadow:
+        0 15px 35px rgba(2, 132, 199, 0.3),
+        inset 0 0 0 6px #bae6fd;
+      z-index: 100;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      font-family: 'Fredoka', sans-serif;
+    }
+
+
+    .modal-header {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    .modal-title {
+      font-size: 24px;
       font-weight: 700;
-      z-index: 10;
-      pointer-events: none;
+      color: #0369a1;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .mood-dropdown {
+      margin-top: 4px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      border: 2px solid #bae6fd;
+      background: #f0f9ff;
+      color: #0284c7;
+      font-weight: 600;
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+    }
+    .close-btn {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      border: 3px solid #ffffff;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .close-btn:hover {
+      transform: scale(1.1);
+    }
+
+    /* Avatar Display Area */
+    .avatar-preview-container {
+      width: 100%;
+      max-width: 280px;
+      height: 240px;
+      background: #f0fdf4; /* Pale pasture green preview */
+      border: 4px solid #86efac;
+      border-radius: 20px;
+      margin: 16px 0;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: inset 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .avatar-preview-canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .xp-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: #ffffff;
+      border: 2px solid #facc15;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-weight: 700;
+      color: #ca8a04;
+      font-size: 12px;
+    }
+
+    /* Change my Look Button */
+    .change-look-btn {
+      margin-top: auto;
+      padding: 12px 32px;
+      background: linear-gradient(135deg, #facc15, #eab308);
+      border: 3px solid #ffffff;
+      border-radius: 9999px;
+      color: #713f12;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #ca8a04;
+      text-transform: uppercase;
+      transition: transform 0.1s;
+    }
+    .change-look-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #ca8a04;
+    }
+    .change-look-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #ca8a04;
+    }
+
+    .modal-footer-stats {
+      width: 100%;
+      text-align: center;
+      margin-top: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #0369a1;
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+    }
+    .modal-footer-stats span {
+      color: #16a34a;
+    }
+
+    /* ── Customization Panel Modal ── */
+    #customizer-modal {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 95vw;
+      max-width: 480px;
+      height: 90vh;
+      max-height: 520px;
+      background: #fef08a; /* soft butter yellow background */
+      border: 6px solid #eab308;
+      border-radius: 24px;
+      box-shadow:
+        0 15px 35px rgba(113, 63, 18, 0.2),
+        inset 0 0 0 6px #fef9c3;
+      z-index: 101;
+      flex-direction: column;
+      padding: 16px;
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    .customizer-tabs {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+      border-bottom: 3px solid #eab308;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      padding: 8px 14px;
+      border-radius: 12px;
+      background: #fef9c3;
+      border: 2px solid #eab308;
+      color: #713f12;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .tab-btn.active {
+      background: #eab308;
+      color: #ffffff;
+    }
+
+    .customizer-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      overflow-y: auto;
+      padding-right: 4px;
+      align-content: start;
+    }
+    .custom-item-card {
+      background: #ffffff;
+      border: 3px solid #fef9c3;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      cursor: pointer;
+      aspect-ratio: 1;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+      position: relative;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .custom-item-card:hover {
+      transform: scale(1.03);
+      border-color: #ca8a04;
+    }
+    .custom-item-card.active {
+      border-color: #ca8a04;
+      background: #fef9c3;
+    }
+    .custom-item-preview {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .item-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #713f12;
+      margin-top: 6px;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .customizer-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 12px;
+      padding-top: 8px;
+    }
+    .save-look-btn {
+      padding: 10px 24px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      border: 3px solid #ffffff;
+      border-radius: 9999px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #15803d;
+    }
+    .save-look-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #15803d;
+    }
+    .save-look-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #15803d;
     }
   </style>
 </head>
 <body>
-  <div id="game-container">
-    <div id="player-count">0 online</div>
-    <div id="chat-overlay">
-      <input type="text" id="chatInput" placeholder="Say hello to other builders!..." autocomplete="off" />
-      <button id="chatSendBtn">Chat!</button>
+  <div id="game-wrapper">
+    <div id="top-hud">
+      <div id="player-count">0 builders online</div>
+    </div>
+    <button id="my-profile-btn">My Profile</button>
+    <div id="game-container">
+      <div id="chat-overlay">
+        <input type="text" id="chatInput" placeholder="Say hello to other builders!..." autocomplete="off" />
+        <button id="chatSendBtn">Chat!</button>
+      </div>
     </div>
   </div>
+
+
+  <!-- ── Profile Modal Card ── -->
+  <div id="profile-modal">
+    <button class="close-btn" id="profile-close-btn">&times;</button>
+    <div class="modal-header">
+      <div class="modal-title" id="profile-name">Builder</div>
+      <select class="mood-dropdown" id="profile-mood">
+        <option value="is happy">is happy 😊</option>
+        <option value="is listening to music">is listening to music 🎧</option>
+        <option value="is gorgeous">is gorgeous ✨</option>
+        <option value="is creative">is creative 🎨</option>
+        <option value="is adventurous">is adventurous 🏕️</option>
+        <option value="is reading">is reading 📚</option>
+      </select>
+    </div>
+    
+    <div class="avatar-preview-container">
+      <div class="xp-badge">XP <span id="profile-xp">895</span></div>
+      <canvas class="avatar-preview-canvas" id="preview-canvas"></canvas>
+    </div>
+
+    <button class="change-look-btn" id="trigger-customizer-btn">Change My Look</button>
+
+    <div class="modal-footer-stats">
+      Builder for: <span id="profile-days">426</span> Days &nbsp;|&nbsp; Level: <span id="profile-level">5</span>
+    </div>
+  </div>
+
+  <!-- ── Character Customizer Modal ── -->
+  <div id="customizer-modal">
+    <button class="close-btn" id="customizer-close-btn">&times;</button>
+    <div class="modal-header" style="align-items: flex-start; margin-bottom: 8px;">
+      <div class="modal-title" style="color: #713f12;">Change My Look</div>
+    </div>
+    
+    <div class="customizer-tabs">
+      <button class="tab-btn active" data-tab="hair">Hair</button>
+      <button class="tab-btn" data-tab="hat">Hats</button>
+      <button class="tab-btn" data-tab="outfit">Outfits</button>
+      <button class="tab-btn" data-tab="back">Held/Back</button>
+      <button class="tab-btn" data-tab="skin">Body Color</button>
+    </div>
+
+    <div class="customizer-grid" id="items-grid">
+      <!-- Grid items dynamically rendered by game.js -->
+    </div>
+
+    <div class="customizer-actions">
+      <button class="save-look-btn" id="save-look-btn" style="width: 100%;">Looks Perfect!</button>
+    </div>
+  </div>
+
   <script src="game.js"></script>
 </body>
 </html>
