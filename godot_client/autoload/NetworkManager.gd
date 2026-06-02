@@ -6,6 +6,8 @@ signal player_moved(id: String, x: float, y: float)
 signal player_left(id: String)
 signal player_customized(id: String, data: Dictionary)
 signal player_chat(id: String, message: String)
+signal auth_success(avatar_data: Dictionary)
+signal auth_error(message: String)
 
 var socket := WebSocketPeer.new()
 var server_url := "ws://localhost:8000/ws"
@@ -59,6 +61,10 @@ func _handle_message(msg_text: String) -> void:
 		player_customized.emit(data.get("id", ""), data.get("player", {}))
 	elif msg_type == "playerChat":
 		player_chat.emit(data.get("id", ""), data.get("message", ""))
+	elif msg_type == "auth_success":
+		auth_success.emit(data.get("avatar_data", {}))
+	elif msg_type == "auth_error":
+		auth_error.emit(data.get("message", "Unknown error"))
 
 
 func send_move(x: float, y: float) -> void:
@@ -83,5 +89,14 @@ func send_chat(message: String) -> void:
 		var dict = {
 			"action": "chat",
 			"message": message
+		}
+		socket.send_text(JSON.stringify(dict))
+
+func send_auth_request(is_signup: bool, user: String, pass_str: String) -> void:
+	if socket.get_ready_state() == WebSocketPeer.STATE_OPEN:
+		var dict = {
+			"action": "signup" if is_signup else "login",
+			"username": user,
+			"password": pass_str
 		}
 		socket.send_text(JSON.stringify(dict))
