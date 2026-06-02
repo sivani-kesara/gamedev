@@ -38,3 +38,5 @@ Thumbs.db
 
 #images
 godot_client/assets/splash_treehouse.png
+test/*
+godot_client/assets/items
