@@ -100,13 +100,15 @@ async def websocket_endpoint(websocket: WebSocket):
             elif action == "customize":
                 if client_id in players:
                     players[client_id].update({
-                        "hair": data.get("hair", players[client_id]["hair"]),
-                        "hat": data.get("hat", players[client_id]["hat"]),
-                        "outfit": data.get("outfit", players[client_id]["outfit"]),
-                        "back": data.get("back", players[client_id]["back"]),
-                        "aura": data.get("aura", players[client_id]["aura"]),
-                        "mood": data.get("mood", players[client_id]["mood"]),
-                        "color": data.get("color", players[client_id]["color"]),
+                        "hair": data.get("hair", players[client_id].get("hair")),
+                        "hat": data.get("hat", players[client_id].get("hat")),
+                        "outfit": data.get("outfit", players[client_id].get("outfit")),
+                        "back": data.get("back", players[client_id].get("back")),
+                        "aura": data.get("aura", players[client_id].get("aura")),
+                        "mood": data.get("mood", players[client_id].get("mood")),
+                        "color": data.get("color", players[client_id].get("color")),
+                        "name": data.get("name", players[client_id].get("name")),
+                        "skin": data.get("skin", players[client_id].get("skin")),
                     })
                 await broadcast({
                     "type": "playerCustomized",
