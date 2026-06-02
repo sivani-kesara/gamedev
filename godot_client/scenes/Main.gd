@@ -16,6 +16,7 @@ func _ready() -> void:
 	# Wire the CustomizerUI to the Avatar
 	customizer_ui.set_avatar(avatar)
 	customizer_ui.item_selected.connect(_on_item_selected)
+	customizer_ui.visible = false
 
 	# Load any previously saved avatar state
 	_load_saved_state()
@@ -192,19 +193,32 @@ func _draw_oval(center: Vector2, rx: float, ry: float, color: Color) -> void:
 # ─── Input Handling ──────────────────────────────────────────────────────────
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Check for tap/click to move the avatar
+	# Check for tap/click to move the avatar or open UI
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var target_pos = get_global_mouse_position()
+		_handle_tap(target_pos)
+	
+	elif event is InputEventScreenTouch and event.pressed:
+		var target_pos = event.position
+		_handle_tap(target_pos)
+
+
+func _handle_tap(target_pos: Vector2) -> void:
+	# Check if clicked on local avatar
+	var avatar_center = avatar.position + (Vector2(0, -15) * avatar.scale.y)
+	var click_radius = 50.0 * avatar.scale.x # Roughly the hit area
+	
+	if target_pos.distance_to(avatar_center) < click_radius:
+		# Toggle customizer UI
+		customizer_ui.visible = not customizer_ui.visible
+	else:
+		# Clicked on the ground: hide customizer and move
+		customizer_ui.visible = false
 		
 		# Send move to server
 		NetworkManager.send_move(target_pos.x, target_pos.y)
 		
 		# Optimistic local movement
-		_tween_avatar_move(avatar, target_pos)
-	
-	elif event is InputEventScreenTouch and event.pressed:
-		var target_pos = event.position
-		NetworkManager.send_move(target_pos.x, target_pos.y)
 		_tween_avatar_move(avatar, target_pos)
 
 
@@ -215,6 +229,12 @@ func _on_connected(id: String, players: Dictionary) -> void:
 	# We just got our ID, let's broadcast our look to the server
 	var json: String = avatar.export_avatar_state()
 	NetworkManager.send_customize(JSON.parse_string(json))
+	
+	# Set our local avatar name/color from the server
+	if players.has(my_id):
+		avatar.current_state["name"] = players[my_id].get("name", "You!")
+		avatar.current_state["color"] = players[my_id].get("color", "0xdb2777")
+		avatar.queue_redraw()
 	
 	# Setup existing players
 	for pid in players.keys():
@@ -257,10 +277,10 @@ func _spawn_player(id: String, data: Dictionary) -> void:
 	new_avatar.load_avatar_state(JSON.stringify(data))
 	
 	# Set position
-	new_avatar.position = Vector2(data.get("x", 360), data.get("y", 300))
+	new_avatar.position = Vector2(data.get("x", 360), data.get("y", 500))
 	
 	# Scale it down a bit to match the original game perhaps? Or keep the same 5x scale?
-	new_avatar.scale = Vector2(5, 5)
+	new_avatar.scale = Vector2(1.5, 1.5)
 	
 	other_players[id] = new_avatar
 
@@ -276,7 +296,7 @@ func _tween_avatar_move(target_avatar: Node2D, target_pos: Vector2) -> void:
 	tween.tween_property(target_avatar, "position", target_pos, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 	
 	# Waddle effect - scale bounce
-	var original_scale = Vector2(5, 5)
+	var original_scale = Vector2(1.5, 1.5)
 	if target_avatar == avatar:
 		original_scale = avatar.scale
 	else:
