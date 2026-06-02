@@ -16,16 +16,14 @@ var current_state: Dictionary = {}
 
 func _ready() -> void:
 	current_state = ItemDatabase.get_default_profile()
-	_start_idle_animation()
+	set_process(true)
 
 
-func _start_idle_animation() -> void:
-	var base_y := position.y
-	var tween := create_tween().set_loops()
-	tween.tween_property(self, "position:y", base_y - 6.0, 0.9) \
-		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-	tween.tween_property(self, "position:y", base_y + 6.0, 0.9) \
-		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+var _idle_time: float = 0.0
+
+func _process(delta: float) -> void:
+	_idle_time += delta
+	queue_redraw()
 
 
 ## Equips an item by category. For "skin", also updates the skin_color.
@@ -89,8 +87,12 @@ func load_avatar_state(json_string: String) -> void:
 func _draw() -> void:
 	var skin_color: Color = current_state.get("skin_color", Color("fbcfe8"))
 
-	# Soft shadow underneath character
+	# Soft shadow underneath character (doesn't bounce)
 	_draw_ellipse_filled(Vector2(0, 28), 11.0, 3.0, Color(0, 0, 0, 0.15))
+
+	# Apply bounce transform for the body
+	var idle_offset = Vector2(0, sin(_idle_time * 3.0) * 4.0)
+	draw_set_transform(idle_offset, 0.0, Vector2.ONE)
 
 	# Name tag
 	if current_state.has("name"):

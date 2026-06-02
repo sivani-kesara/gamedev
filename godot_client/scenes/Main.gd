@@ -28,6 +28,15 @@ func _ready() -> void:
 	NetworkManager.player_left.connect(_on_player_left)
 	NetworkManager.player_customized.connect(_on_player_customized)
 
+	# Setup local avatar click button
+	var btn := Button.new()
+	btn.flat = true
+	btn.focus_mode = Control.FOCUS_NONE
+	btn.custom_minimum_size = Vector2(80, 100)
+	btn.position = Vector2(-40, -70)
+	btn.pressed.connect(_on_local_avatar_clicked)
+	avatar.add_child(btn)
+
 	# Print serialization demo to console
 	call_deferred("_print_state_info")
 
@@ -196,30 +205,27 @@ func _unhandled_input(event: InputEvent) -> void:
 	# Check for tap/click to move the avatar or open UI
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var target_pos = get_global_mouse_position()
-		_handle_tap(target_pos)
+		_handle_ground_tap(target_pos)
 	
 	elif event is InputEventScreenTouch and event.pressed:
 		var target_pos = event.position
-		_handle_tap(target_pos)
+		_handle_ground_tap(target_pos)
 
 
-func _handle_tap(target_pos: Vector2) -> void:
-	# Check if clicked on local avatar
-	var avatar_center = avatar.position + (Vector2(0, -15) * avatar.scale.y)
-	var click_radius = 50.0 * avatar.scale.x # Roughly the hit area
+func _on_local_avatar_clicked() -> void:
+	# Toggle customizer UI
+	customizer_ui.visible = not customizer_ui.visible
+
+
+func _handle_ground_tap(target_pos: Vector2) -> void:
+	# Clicked on the ground: hide customizer and move
+	customizer_ui.visible = false
 	
-	if target_pos.distance_to(avatar_center) < click_radius:
-		# Toggle customizer UI
-		customizer_ui.visible = not customizer_ui.visible
-	else:
-		# Clicked on the ground: hide customizer and move
-		customizer_ui.visible = false
-		
-		# Send move to server
-		NetworkManager.send_move(target_pos.x, target_pos.y)
-		
-		# Optimistic local movement
-		_tween_avatar_move(avatar, target_pos)
+	# Send move to server
+	NetworkManager.send_move(target_pos.x, target_pos.y)
+	
+	# Optimistic local movement
+	_tween_avatar_move(avatar, target_pos)
 
 
 # ─── Multiplayer Networking ─────────────────────────────────────────────
