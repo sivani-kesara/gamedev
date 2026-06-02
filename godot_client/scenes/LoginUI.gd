@@ -90,6 +90,6 @@ func _on_auth_success(avatar_data: Dictionary) -> void:
 	
 	# Scene routing based on state
 	if current_mode == LoginMode.NEW_PLAYER:
-		get_tree().change_scene_to_file("res://scenes/CustomizerUI.tscn")
-	else:
-		get_tree().change_scene_to_file("res://scenes/Main.tscn")
+		NetworkManager.is_new_signup = true
+	
+	get_tree().change_scene_to_file("res://scenes/Main.tscn")

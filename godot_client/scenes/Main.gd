@@ -17,6 +17,10 @@ func _ready() -> void:
 	customizer_ui.set_avatar(avatar)
 	customizer_ui.item_selected.connect(_on_item_selected)
 	customizer_ui.visible = false
+	
+	if NetworkManager.is_new_signup:
+		NetworkManager.is_new_signup = false
+		customizer_ui.visible = true
 
 	# Load any previously saved avatar state
 	_load_saved_state()

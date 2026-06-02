@@ -11,6 +11,7 @@ signal auth_error(message: String)
 
 var socket := WebSocketPeer.new()
 var server_url := "ws://localhost:8000/ws"
+var is_new_signup: bool = false
 
 func _ready() -> void:
 	var err = socket.connect_to_url(server_url)
