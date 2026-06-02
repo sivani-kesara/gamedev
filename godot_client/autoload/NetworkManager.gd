@@ -10,15 +10,16 @@ signal auth_success(avatar_data: Dictionary)
 signal auth_error(message: String)
 
 var socket := WebSocketPeer.new()
-var server_url := "ws://localhost:8000/ws"
+var server_url := "ws://127.0.0.1:8000/ws"
 var is_new_signup: bool = false
 
 func _ready() -> void:
 	connect_to_server()
 
 func connect_to_server() -> void:
-	if socket.get_ready_state() != WebSocketPeer.STATE_CLOSED:
+	if socket != null and socket.get_ready_state() != WebSocketPeer.STATE_CLOSED:
 		socket.close()
+	socket = WebSocketPeer.new()
 	var err = socket.connect_to_url(server_url)
 	if err != OK:
 		print("NetworkManager: Unable to connect to ", server_url)
