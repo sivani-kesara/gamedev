@@ -13,6 +13,7 @@ mono_crash_*.json
 
 # Python-specific files
 __pycache__/
+__pycache__/server.cpython-312.pyc
 *.py[cod]
 *$py.class
 .venv/
