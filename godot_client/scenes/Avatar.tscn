@@ -1,6 +1,33 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scenes/Avatar.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/items/body/body_base.png" id="2"]
 
 [node name="Avatar" type="Node2D"]
 script = ExtResource("1")
+
+[node name="BackLayer" type="Sprite2D" parent="."]
+z_index = 0
+texture_filter = 1
+centered = true
+
+[node name="BodyLayer" type="Sprite2D" parent="."]
+z_index = 1
+texture_filter = 1
+centered = true
+texture = ExtResource("2")
+
+[node name="OutfitLayer" type="Sprite2D" parent="."]
+z_index = 2
+texture_filter = 1
+centered = true
+
+[node name="HairLayer" type="Sprite2D" parent="."]
+z_index = 3
+texture_filter = 1
+centered = true
+
+[node name="HatLayer" type="Sprite2D" parent="."]
+z_index = 4
+texture_filter = 1
+centered = true
