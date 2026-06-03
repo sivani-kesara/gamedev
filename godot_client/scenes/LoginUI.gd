@@ -1,11 +1,12 @@
 extends Control
 
-enum LoginMode {
-	NEW_PLAYER,
-	RETURNING_PLAYER
+enum States {
+	SELECTION,
+	INPUT_FORM
 }
 
-var current_mode: LoginMode = LoginMode.NEW_PLAYER
+var current_state: States = States.SELECTION
+var is_signup: bool = false
 
 @onready var selection_menu: VBoxContainer = $CenterContainer/SelectionMenu
 @onready var input_form: VBoxContainer = $CenterContainer/InputForm
@@ -21,36 +22,43 @@ func _ready() -> void:
 	$CenterContainer/InputForm/SubmitButton.pressed.connect(_on_submit_pressed)
 	$CenterContainer/InputForm/BackButton.pressed.connect(_on_back_pressed)
 	
-	_show_selection_menu()
-	NetworkManager.connected_to_server.connect(_on_connected)
+	_update_ui_state(States.SELECTION)
+	NetworkManager.auth_result.connect(_on_auth_result)
 	NetworkManager.auth_success.connect(_on_auth_success)
-	NetworkManager.auth_error.connect(_on_auth_error)
 
-func _show_selection_menu() -> void:
-	selection_menu.visible = true
-	input_form.visible = false
-	username_input.text = ""
-
-func _show_input_form() -> void:
-	selection_menu.visible = false
-	input_form.visible = true
-	error_label.text = ""
-	password_input.text = ""
+func _update_ui_state(new_state: States) -> void:
+	current_state = new_state
+	match current_state:
+		States.SELECTION:
+			selection_menu.visible = true
+			input_form.visible = false
+			username_input.text = ""
+			password_input.text = ""
+			error_label.text = ""
+			submit_button.disabled = false
+		States.INPUT_FORM:
+			selection_menu.visible = false
+			input_form.visible = true
+			error_label.text = ""
+			password_input.text = ""
+			submit_button.disabled = false
+			if is_signup:
+				form_title.text = "Create Account!"
+				submit_button.text = "Start Building"
+			else:
+				form_title.text = "Welcome Back!"
+				submit_button.text = "Enter World"
 
 func _on_new_player_pressed() -> void:
-	current_mode = LoginMode.NEW_PLAYER
-	form_title.text = "Create Account!"
-	submit_button.text = "Start Building"
-	_show_input_form()
+	is_signup = true
+	_update_ui_state(States.INPUT_FORM)
 
 func _on_returning_player_pressed() -> void:
-	current_mode = LoginMode.RETURNING_PLAYER
-	form_title.text = "Welcome Back!"
-	submit_button.text = "Enter World"
-	_show_input_form()
+	is_signup = false
+	_update_ui_state(States.INPUT_FORM)
 
 func _on_back_pressed() -> void:
-	_show_selection_menu()
+	_update_ui_state(States.SELECTION)
 
 func _on_submit_pressed() -> void:
 	var username: String = username_input.text.strip_edges()
@@ -63,23 +71,14 @@ func _on_submit_pressed() -> void:
 	submit_button.text = "Connecting..."
 	error_label.text = ""
 	
-	if NetworkManager.socket.get_ready_state() == WebSocketPeer.STATE_OPEN:
-		NetworkManager.send_auth_request(current_mode == LoginMode.NEW_PLAYER, username, password)
-	else:
-		error_label.text = "Reconnecting..."
-		NetworkManager.connect_to_server()
+	var mode_str = "signup" if is_signup else "login"
+	NetworkManager.start_auth(mode_str, username, password)
 
-func _on_connected(_id: String, _players: Dictionary) -> void:
-	if submit_button.disabled and (error_label.text == "" or error_label.text == "Reconnecting..."):
-		error_label.text = ""
-		var username: String = username_input.text.strip_edges()
-		var password: String = password_input.text
-		NetworkManager.send_auth_request(current_mode == LoginMode.NEW_PLAYER, username, password)
-
-func _on_auth_error(message: String) -> void:
-	error_label.text = message
-	submit_button.disabled = false
-	submit_button.text = "Start Building" if current_mode == LoginMode.NEW_PLAYER else "Enter World"
+func _on_auth_result(success: bool, message: String, mode: String) -> void:
+	if not success:
+		error_label.text = message
+		submit_button.disabled = false
+		submit_button.text = "Start Building" if is_signup else "Enter World"
 
 func _on_auth_success(avatar_data: Dictionary) -> void:
 	# Save updated data locally so it persists for Customizer/Main scenes
@@ -88,8 +87,7 @@ func _on_auth_success(avatar_data: Dictionary) -> void:
 		file_out.store_string(JSON.stringify(avatar_data))
 		file_out.close()
 	
-	# Scene routing based on state
-	if current_mode == LoginMode.NEW_PLAYER:
+	if is_signup:
 		NetworkManager.is_new_signup = true
 	
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")

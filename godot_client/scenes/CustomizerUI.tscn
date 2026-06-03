@@ -79,6 +79,22 @@ theme_override_constants/separation = 8
 [node name="Separator" type="HSeparator" parent="WardrobePanel/VBox"]
 layout_mode = 2
 
+[node name="ColorPickerContainer" type="HBoxContainer" parent="WardrobePanel/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 1
+
+[node name="ColorPickerLabel" type="Label" parent="WardrobePanel/VBox/ColorPickerContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.9, 0.85, 1.0, 1)
+text = "Custom Skin Color:"
+
+[node name="ColorPickerButton" type="ColorPickerButton" parent="WardrobePanel/VBox/ColorPickerContainer"]
+custom_minimum_size = Vector2(80, 44)
+layout_mode = 2
+
 [node name="ItemScroll" type="ScrollContainer" parent="WardrobePanel/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
