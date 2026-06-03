@@ -12,8 +12,16 @@ signal auth_error(message: String)
 var socket := WebSocketPeer.new()
 var server_url := "ws://127.0.0.1:8000/ws"
 var is_new_signup: bool = false
+var _reconnect_timer: Timer = null
+var _reconnect_elapsed: float = 0.0
+const RECONNECT_TIMEOUT: float = 3.0
 
 func _ready() -> void:
+	_reconnect_timer = Timer.new()
+	_reconnect_timer.one_shot = true
+	_reconnect_timer.wait_time = RECONNECT_TIMEOUT
+	_reconnect_timer.timeout.connect(_on_reconnect_timeout)
+	add_child(_reconnect_timer)
 	connect_to_server()
 
 func connect_to_server() -> void:
@@ -23,9 +31,19 @@ func connect_to_server() -> void:
 	var err = socket.connect_to_url(server_url)
 	if err != OK:
 		print("NetworkManager: Unable to connect to ", server_url)
+		auth_error.emit("Unable to reach server.")
 	else:
 		print("NetworkManager: Connecting to ", server_url, "...")
 		set_process(true)
+		_reconnect_elapsed = 0.0
+		_reconnect_timer.start()
+
+
+func _on_reconnect_timeout() -> void:
+	# If we're still not open after the timeout, give up and notify the UI
+	if socket.get_ready_state() != WebSocketPeer.STATE_OPEN:
+		print("NetworkManager: Reconnect timed out after ", RECONNECT_TIMEOUT, "s")
+		auth_error.emit("Server unreachable. Please try again.")
 
 
 func _process(_delta: float) -> void:
@@ -57,6 +75,7 @@ func _handle_message(msg_text: String) -> void:
 	var msg_type = data["type"]
 	
 	if msg_type == "init":
+		_reconnect_timer.stop()  # Connection succeeded, cancel timeout
 		print("NetworkManager: Connected as ", data.get("id"))
 		connected_to_server.emit(data.get("id", ""), data.get("players", {}))
 	elif msg_type == "playerJoined":
@@ -107,4 +126,14 @@ func send_auth_request(is_signup: bool, user: String, pass_str: String) -> void:
 			"username": user,
 			"password": pass_str
 		}
+		socket.send_text(JSON.stringify(dict))
+
+
+## Sends the finalized avatar customization selections to the server.
+## Maps the full-key dictionary to the server's "customize" action, which
+## persists changes into the SQLite users table.
+func send_customization_update(selections: Dictionary) -> void:
+	if socket.get_ready_state() == WebSocketPeer.STATE_OPEN:
+		var dict = selections.duplicate()
+		dict["action"] = "customize"
 		socket.send_text(JSON.stringify(dict))
