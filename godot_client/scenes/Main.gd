@@ -245,7 +245,7 @@ func _spawn_player(id: String, data: Dictionary) -> void:
 	new_avatar.position = Vector2(data.get("x", 360), data.get("y", 500))
 
 	# Scale to match local avatar
-	new_avatar.scale = Vector2(0.7, 0.7)
+	new_avatar.scale = Vector2(0.55, 0.55)
 
 	other_players[id] = new_avatar
 
@@ -261,7 +261,7 @@ func _tween_avatar_move(target_avatar: Node2D, target_pos: Vector2) -> void:
 	tween.tween_property(target_avatar, "position", target_pos, duration).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 
 	# Waddle effect - scale bounce
-	var original_scale = Vector2(0.7, 0.7)
+	var original_scale = Vector2(0.55, 0.55)
 	if target_avatar == avatar:
 		original_scale = avatar.scale
 	else:
